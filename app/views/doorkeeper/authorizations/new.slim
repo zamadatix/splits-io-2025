@@ -1,0 +1,36 @@
+- content_for(:title, 'Authorize')
+- if current_user.nil?
+  article You need to be signed in to view this page.
+- else
+  article
+    .row
+      .col-lg-6.offset-lg-3
+        .card
+          .card-body
+            p
+              ' Hi
+              b< #{current_user}
+              ' ! The application
+            p: h4.text-primary = @pre_auth.client.name
+            p: span is requesting these abilities:
+            p: ol
+                li See who you are on Splits.io
+                - @pre_auth.scope.split(' ').each do |scope|
+                  li = I18n.t(scope, scope: %i[doorkeeper scopes])
+            p You can always revoke these permissions later.
+          .card-footer.clearfix
+            = form_for oauth_authorization_path, method: :delete, html: {class: 'd-inline'} do |f|
+              = hidden_field_tag :client_id, @pre_auth.client.uid
+              = hidden_field_tag :redirect_uri, @pre_auth.redirect_uri
+              = hidden_field_tag :state, @pre_auth.state
+              = hidden_field_tag :response_type, @pre_auth.response_type
+              = hidden_field_tag :scope, @pre_auth.scope
+              = submit_tag t('doorkeeper.authorizations.buttons.deny'), class: 'btn btn-outline-danger'
+            .float-right
+              = form_for oauth_authorization_path, method: :post do |f|
+                = hidden_field_tag :client_id, @pre_auth.client.uid
+                = hidden_field_tag :redirect_uri, @pre_auth.redirect_uri
+                = hidden_field_tag :state, @pre_auth.state
+                = hidden_field_tag :response_type, @pre_auth.response_type
+                = hidden_field_tag :scope, @pre_auth.scope
+                = submit_tag t('doorkeeper.authorizations.buttons.authorize'), class: 'btn btn-outline-success'

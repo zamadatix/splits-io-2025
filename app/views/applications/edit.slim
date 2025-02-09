@@ -1,0 +1,72 @@
+- content_for(:title, 'Edit Application')
+- content_for(:header)
+  ol.breadcrumb.shadow
+    li.breadcrumb-item = link_to(site_title, root_path)
+    li.breadcrumb-item = link_to('Settings', settings_path)
+    li.breadcrumb-item = link_to('Developer Applications', settings_path(anchor: 'applications'))
+    li.breadcrumb-item = link_to(@application.name, application_path(@application))
+    li.breadcrumb-item = link_to('Edit', edit_application_path(@application))
+- if current_user.nil?
+  article You need to be signed in to view this page.
+- else
+  .col-md-10.offset-md-1
+    .card
+      .card-header.text-white Edit #{@application.name}
+      .card-body
+        .form-group
+          p
+            .row
+              .col-lg-8
+                input.form-control type='text' value=@application.uid disabled=true
+              .col-lg-4
+                b Client ID
+                i< = "(not changeable)"
+          p
+            .row
+              .col-lg-8
+                .input-group
+                  - if (Time.now.utc - 24.hours) > @application.secret_generated_at
+                    input.form-control type='text' value="<Hidden forever>" disabled=true
+                  - else
+                    input.form-control.border-warning type='text' value=@application.secret disabled=true
+                  .input-group-append
+                    = link_to( \
+                      application_path(@application, reset_secret: '1'), \
+                      class: 'btn btn-outline-danger', \
+                      method: :patch, \
+                      data: { \
+                        confirm: "Really reset the client secret for #{@application.name}? This will invalidate \
+                        the current secret, preventing it from being used. Existing user authorizations will not \
+                        be affected." \
+                      } \
+                    )
+                      span = icon('fas', 'skull')
+                      span< Reset Client Secret
+              .col-lg-4
+                b Client Secret
+                p
+                  small.text-warning
+                    span = icon('fas', 'clock')
+                    span< Hides forever after 24 hours
+          = form_for(@application, url: application_path(@application)) do |f|
+            p
+              .row
+                .col-lg-8
+                  = f.text_field(:name, class: 'form-control', placeholder: 'Application name (what users will see)')
+                .col-lg-4
+                  b Application Name
+                  span< = "(what users will see)"
+            p
+              .row
+                .col-lg-8
+                  = f.text_field(:redirect_uri, class: 'form-control', placeholder: 'Redirect URI (include http:// or https://)')
+                .col-lg-4
+                  p
+                    b Redirect URI
+                  p
+                    span Include a protocol, like
+                    code< https://
+                    span . You can also use a custom protocol if users should be redirected to your app.
+            .card-footer
+              .float-right
+                = f.submit('Save application', class: 'btn btn-primary')

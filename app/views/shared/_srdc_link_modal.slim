@@ -1,0 +1,24 @@
+#srdc-link.modal.fade tabindex='-1' role='dialog' aria={labelledby: 'srdc-label', hidden: true}
+  .modal-dialog role='document'
+    .modal-content
+      = form_for SpeedrunDotComUser.new do |f|
+        .modal-header.bg-dark
+          h5.text-light Auto-Submit
+        .modal-body.bg-dark
+          .row.text-light.m-2
+            p.lead
+              ' Connect your speedrun.com account to Splits.io to enable auto-submit.
+          .row.m-2
+            .btn-group.mx-auto.mb-4
+              a.btn.btn-srdc.mx-auto target='_blank' rel='noopener' href='https://www.speedrun.com/api/auth' onclick='document.getElementById("api-key").focus()'
+                => image_tag(asset_path('srdc.png'), style: 'height: 0.8em')
+                ' Copy speedrun.com API key
+            p: small
+              ' Splits.io will never take action on your speedrun.com account without your permission.
+          .row.text-light.m-2
+            p Paste the API key here:
+            = f.text_field(:api_key, id: 'api-key', class: 'form-control', placeholder: 'Paste the API key here', spellcheck: false)
+        - if controller_name == 'runs'
+          .modal-footer.bg-dark: .float-right: .btn-group = f.submit('Next', class: 'btn btn-primary')
+        - else
+          .modal-footer.bg-dark: .float-right: .btn-group = f.submit('Save', class: 'btn btn-primary')

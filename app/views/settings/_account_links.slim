@@ -1,0 +1,67 @@
+.list-group
+  .list-group-item
+    - if current_user.twitch.nil?
+      a.btn.btn-twitch href='/auth/twitch'
+        => icon('fab', 'twitch')
+        ' Connect Twitch account
+    - else
+      - if current_user.google.present? || current_user.password_digest
+        a.btn.btn-outline-light href='/auth/twitch/unlink'
+          => icon('fab', 'twitch')
+          ' Disconnect Twitch
+      - else
+        i.btn.btn-outline-light.disabled(
+          content='You have not set a password yet, so this is your only method of signing in. Please set a password to disconnect this link.'
+          style='cursor: not-allowed'
+          v-tippy=true
+        )
+          => icon('fab', 'twitch')
+          ' Not disconnectable
+      .text-muted.mt-2.float-right
+        ' Linked as
+        b< = current_user.twitch.display_name
+  .list-group-item
+    - if current_user.google.nil?
+      a.btn.btn-google href='/auth/google'
+        => icon('fab', 'google')
+        | Connect Google
+    - else
+      .m-3
+      - if current_user.twitch.present? || current_user.password_digest
+        a.btn.btn-outline-light href='/auth/google/unlink'
+          => icon('fab', 'google')
+          ' Disconnect Google
+      - else
+        i.btn.btn-outline-light.disabled(
+          content='You have not set a password yet, so this is your only method of signing in. Please set a password to disconnect this link.'
+          style='cursor: not-allowed'
+          v-tippy=true
+        ) Not disconnectable
+      .text-muted.mt-2.float-right
+        ' Linked as
+        b< = current_user.google.name
+  .list-group-item
+    - if current_user.patreon.nil?
+      a.btn.btn-patreon.mr-2 href='/auth/patreon'
+        => icon('fab', 'patreon')
+        | Connect Patreon
+    - else
+      a.btn.btn-outline-light.mr-2 href='/auth/patreon/unlink'
+        => icon('fab', 'patreon')
+        ' Disconnect Patreon
+      .text-muted.mt-2.float-right
+        ' Linked as
+        b< = current_user.patreon.full_name
+  .list-group-item
+    - if current_user.srdc.nil?
+      a.btn.btn-srdc.mr-2 href='#' data={toggle: :modal, target: '#srdc-link'}
+        => image_tag(asset_path('srdc.png'), style: 'height: 0.8em', alt: 'Speedrun.com first place trophy')
+        ' Connect speedrun.com
+      = render partial: 'shared/srdc_link_modal'
+    - else
+      = button_to(speedrun_dot_com_user_path, method: :delete, class: 'btn btn-outline-light mr-2', form_class: 'd-inline')
+        => image_tag(asset_path('srdc.png'), style: 'height: 0.8em', alt: 'Speedrun.com first place trophy')
+        ' Disconnect speedrun.com
+      .text-muted.mt-2.float-right
+        ' Linked as
+        b< = current_user.srdc.name

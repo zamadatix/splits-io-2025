@@ -1,0 +1,21 @@
+- if current_user.twitch&.follows&.any?
+  .card
+    h5.card-header Feed
+    .list-group.bg-transparent
+      - followed_runs = Run.includes(:game, :category, :user).where(users: {twitch: current_user.twitch.follows}).where.not(games: {name: [nil, '']}).order('runs.created_at DESC').limit(6)
+      - my_runs = current_user.pbs.where(category_id: followed_runs.map(&:category_id))
+      - followed_runs.each do |run|
+        = link_to(run, class: 'list-group-item list-group-item-action flex-column align-items-start bg-transparent text-light')
+          .media
+            = image_tag(run.user.avatar, skip_pipeline: true, size: '70x70', class: 'mr-3')
+            .media-body
+              .d-flex.w-100.justify-content-between
+                h5.mb-1 = run.user
+                div = render partial: 'shared/relative_time', locals: {time: run.created_at, ago: true}
+              h6.mb-1
+                = "#{run.game} #{run.category}"
+              div
+                = run.duration(run.default_timing).format
+                - my_pb = my_runs.detect { |r| r.category_id == run.category_id }
+                - if my_pb.present?
+                  = delta(run.duration(run.default_timing), my_pb.duration(run.default_timing), subject: 'my PB')

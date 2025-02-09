@@ -1,0 +1,84 @@
+race-title(
+  inline-template=true
+  :race='race'
+  :starting='starting'
+  :syncing='syncing'
+  v-on:syncing='setSyncing()'
+  v-if='race'
+)
+  div v-cloak=true
+    .row: .col-md-12
+      h1 v-if='!editing' = '{{title}}'
+      = form_for race, url: race_path(race), html: {'v-if' => 'editing'} do |f|
+        .form-row
+          = f.hidden_field(:game, id: 'selected-game-id', value: race.game&.id)
+          .my-3.col-md-12
+            label for='game-selector' Game
+            game-selector v-model='game'
+            label for='category-selector' Category
+            category-selector :game='game' v-model='category' null-category='N/A or race-specific category'
+    .row
+      .col-md-12
+        - if race.has_attribute?(:card_url)
+          h5#card-url = "Card: #{race.card_url || 'None'}"
+        - if race.has_attribute?(:seed)
+          h5#seed-name = "Seed: #{race.seed || 'None'}"
+
+        h5
+          span v-show='!editing'
+            ' created by
+            = user_badge(race.owner)
+          .btn-group.ml-2 v-if='!editing'
+            - if race.belongs_to?(current_user)
+              button.btn.btn-outline-light.btn-sm.clipboard-btn(
+                aria-label='Copy race URL'
+                content='Copy invite link'
+                data-clipboard-text=race_url(race, join_token: race.join_token)
+                v-tippy=true
+              )
+                span#copy = icon('fas', 'share-alt')
+                span#copied style='display: none;' = icon('fas', 'check')
+              - if !race.started?
+                button.btn.btn-outline-light.btn-sm(
+                  :content='error || "Edit"'
+                  :disabled='loading'
+                  @click='edit'
+                  aria-label='Edit race information'
+                  v-if='!editing && !race.started_at'
+                  v-tippy=true
+                )
+                  template v-if='loading' = render partial: 'shared/spinner'
+                  template v-else-if='error' = icon('fas', 'times')
+                  template v-else=true = icon('fas', 'edit')
+          a.btn.btn-outline-light.btn-sm.ml-2(
+            aria-label='View in browser source friendly layout (beta)'
+            content='View in browser source friendly layout (beta)'
+            href=race_path(race, controller.race_params.merge(browsersource: 1))
+            v-if='!editing'
+            v-tippy=true
+          ) = icon('fas', 'broadcast-tower')
+          small.text-muted.ml-2 v-if='syncing'
+            => render partial: 'shared/spinner'
+            ' Syncing
+
+      .col-md-12
+        div v-if="false" = render partial: 'shared/spinner'
+        template v-if='!editing' = render partial: 'races/nav'
+      .col-md-12.mt-2
+        pre.text-light.text-wrap v-show='!editing'
+          ' {{(race.notes || '').split('\n').splice(1).filter(s => s !== '').join('\n')}}
+        template v-if='editing'
+          textarea.text-dark.p-2 style='font-family: monospace; width: 100%' rows=10 v-model='notes' placeholder='First line: Race title supplement
+
+          The rest: Notes, rules, and links'
+        .btn-group.mb-4 v-if='editing'
+          button.btn.btn-outline-light @click='cancel' v-tippy=true Cancel changes
+          button.btn.btn-success(
+            :content='error'
+            :disabled='loading'
+            @click='save'
+            v-tippy=true
+          )
+            template v-if='loading' = render partial: 'shared/spinner'
+            template v-else-if='error' = icon('fas', 'exclamation-triangle')
+            template v-else=true Update race

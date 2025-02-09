@@ -1,0 +1,41 @@
+- content_for(:title, @user)
+- content_for(:header) do
+  ol.breadcrumb.shadow
+    li.breadcrumb-item = link_to(site_title, root_path)
+    li.breadcrumb-item = link_to(@user, user_path(@user))
+  h2
+    span style='margin-right: .5em;'
+      img src=@user.avatar width=50 height=50 alt="#{@user}'s profile picture"
+    span = user_badge(@user)
+  .mb-2
+    - if @user.twitch.present?
+      a.btn.btn-twitch.mr-2(
+        aria-label="Watch #{@user} on Twitch"
+        content='Watch on Twitch'
+        href=@user.twitch.url
+        v-tippy=true
+      ) => icon('fab', 'twitch')
+    - if @user.srdc.present?
+      a.btn.btn-srdc(
+        aria-label="View #{@user} on speedrun.com"
+        content='Visit on speedrun.com'
+        href=@user.srdc.url
+        v-tippy=true
+      ) => image_tag(asset_path('srdc.png'), style: 'height: 0.8em', alt: 'Speedrun.com logo')
+
+.row.row-cols-1.row-cols-md-2.mx-0
+  .col.p-1: .card
+    = render 'shared/race_table', \
+      races: @user.races.with_ends.finished.not_secret_visibility.order(ended_at: :desc), \
+      user: @user, \
+      active_races: @user.races.active.not_secret_visibility, \
+      description: "#{@user}'s Races"
+
+  .col.p-1: .card
+    = render 'shared/run_table', { \
+      runs: @user.pbs, \
+      cols: %i[time video name uploaded], \
+      col_options: {time: [:archived]}, \
+      description: 'Personal Bests', \
+      user: @user \
+    }.merge(sorting_info)

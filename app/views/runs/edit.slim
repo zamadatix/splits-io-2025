@@ -1,0 +1,145 @@
+- content_for(:title, @run)
+- timing = params[:timing] || @run.default_timing
+
+- content_for(:header) do
+  ol.breadcrumb.shadow
+    li.breadcrumb-item = link_to(site_title, root_path)
+    - if @run.game.present? && @run.category.present?
+      li.breadcrumb-item = link_to(@run.game, @run.game)
+      li.breadcrumb-item = link_to(@run.category, game_category_path(@run.game, @run.category))
+    li.breadcrumb-item = link_to(@run.id36, @run)
+    li.breadcrumb-item.active = link_to('Edit run', edit_run_path(@run))
+
+.row.mx-2
+  .col-md-4 = render 'title', timing: timing, run: @run, compare_runs: @compare_runs
+  .col-md-8 = render 'stats', timing: timing, run: @run, compare_runs: @compare_runs
+
+= render 'full_timeline', timing: timing, run: @run, compare_runs: @compare_runs
+
+.row.row-cols-1.row-cols-md-2.mx-1
+  .col.p-1
+    = form_for @run, namespace: 'category', html: {class: 'card h-100'} do |f|
+      h5.card-header Edit game/category
+      .card-body
+        edit-run-game-and-category run-id=@run.id36
+      .card-footer.clearfix: .float-right
+        = f.submit 'Save game/category', id: 'game-category-submit', class: 'btn btn-outline-primary'
+
+  .col.p-1
+    = form_for @run.video || @run.build_video, url: run_video_path(@run), method: :put, html: {class: 'card h-100'} do |f|
+      h5.card-header Edit video
+      .card-body
+        .form-group
+          = f.label :url, 'Video URL'
+          div
+            = f.text_field :url, class: 'form-control', placeholder: 'URL for a Twitch or YouTube VOD', 'aria-label' => 'Video URL'
+        .form-group.row
+          .col-md-6
+            = f.label :start_offset_seconds, "Start offset (in seconds)", class: 'tip', title: 'test'
+            small< content='The timestamp on the video when the run started. This helps us coordinate your splits with your video. Only enter seconds, do not enter anything like XX:YY.' v-tippy=true
+              = icon('fas', 'question-circle')
+            div
+              = f.number_field :start_offset_seconds, class: 'form-control', 'aria-label' => 'Video Start Offset', placeholder: 'Number of seconds, e.g. 12'
+      .card-footer.clearfix: .float-right
+        a.btn.btn-youtube#youtube-timestamps-button(
+          content='<div class="text-left"><p>Saves your video and copies video timestamps to your clipboard for use in YouTube descriptions; e.g.</p><code>0:02 Tron City<br />0:55 Start Abraxas fight<br />3:47 Finish Abraxas fight</code><p>... etc.</p><p class="mb-0">Set your offset before clicking this, or they will not be accurate!</p></div>'
+          href='#'
+          v-tippy=true
+          style="visibility: #{@run.belongs_to?(current_user) && @run.video&.youtube? ? 'visible' : 'hidden'};"
+        )
+          => icon('fab', 'youtube')
+          ' Copy YouTube timestamps
+        = text_area_tag(:youtube_timestamps, "", rows: 0, cols: 0, style: "height: 0px; opacity: 0; width: 0px;", data: { segments: @run.collapsed_segments(timing).map { |segment| { name: CGI.escapeHTML(segment.display_name), start_ms: segment.start(timing).to_ms, end_ms: segment.end(timing).to_ms } }})
+        = f.submit 'Save video', class: 'btn btn-outline-primary', id: 'save-video'
+
+  .col.p-1
+    = form_for @run, namespace: 'srdc', html: {class: 'card h-100'} do |f|
+      h5.card-header Edit speedrun.com link
+      .card-body
+        = f.text_field :srdc_url, class: 'form-control', placeholder: 'URL for your run on speedrun.com', 'aria-label' => 'Speedrun.com URL'
+      .card-footer.clearfix: .float-right: .btn-group
+        = f.submit 'Save speedrun.com link', class: 'btn btn-outline-primary'
+
+  .col.p-1: .card.h-100
+    h5.card-header Reparse
+    .card-body
+      p This button forces Splits.io to reparse your run's original file, repopulating your on-site splits and stats.
+        This can sometimes resolve bugs, but will undo some modifications made to your run on Splits.io, like
+        cloud-based splits.
+      p This is not reversible.
+    .card-footer
+      .float-right
+        / This needs data-turbolinks="false" or the reparse page will refresh itself infinitely
+        a.btn.btn-outline-warning data-turbolinks="false" href=edit_run_path(@run, reparse: '1') Reparse run
+
+  .col.p-1
+    - if current_user&.has_hiding?
+      = render 'hide', run: @run
+    - else
+      .card.h-100
+        h5.card-header Hide
+        .card-body: center.m-4
+          h1 = icon('fas', 'lock')
+          i Subscribe to Splits.io to hide your run from listings without deleting it.
+        .card-footer.clearfix: .float-right
+            a.btn.btn-primary href=subscriptions_path Subscribe
+
+  - if @run.completed?(Run::REAL) && @run.completed?(Run::GAME)
+    .col.p-1
+      = form_for @run, namespace: 'timing', html: {class: 'card h-100'} do |f|
+        h5.card-header Default timing
+        .card-body
+          p For runs with times logged in both realtime and gametime, viewers can always toggle which is displayed.
+            However, you can set the default behavior for this run here.
+          p This is reversible.
+        .card-footer
+          .float-right
+            - if @run.default_timing == 'game'
+              = f.hidden_field(:default_timing, value: 'real')
+              => icon('fas', 'gamepad')
+              i.text-secondary.mr-2 Currently gametime
+              = f.submit 'Set to realtime', class: 'btn btn-outline-primary'
+            - else
+              = f.hidden_field(:default_timing, value: 'game')
+              => icon('fas', 'globe-americas')
+              i.text-secondary.mr-2 Currently realtime
+              = f.submit 'Set to gametime', class: 'btn btn-outline-primary'
+  #delete.col.p-1
+    .card
+      h5.card-header Delete or disown
+      .card-body
+        p
+          b> Deleting
+          ' a run is permanent. The original file will be destroyed. The URL
+          code<> #{run_url(@run).split('//')[1]}
+          ' will not be reclaimed and will error forever.
+        p
+          b> Disowning
+          ' a run will leave it in place but anonymize it. Your name will not appear on it, and you will lose the
+          ' ability to edit or delete it forever.
+        p
+          ' You can choose to
+          b> hide
+          ' your run instead, found elsewhere on this page.
+        p These are not reversible.
+      .card-footer
+        .float-right: .btn-group
+          / Not sure why, but leaving off these wrapping divs makes the first tooltip appear for both buttons
+          div: tippy content='Leave the run here, but unbind it from your account.'
+            template v-slot='trigger'
+              = button_to( \
+                run_path(@run), \
+                class: 'btn btn-outline-danger mr-2', \
+                data: {confirm: "Really disown your #{@run} run? This is not reversible."}, \
+                method: :patch, \
+                params: {run: {disown: true}}, \
+              )
+                ' Disown
+          div: tippy content='Permanently delete the run and its source file.'
+            template v-slot='trigger'
+              = button_to(run_path(@run), \
+                class: 'btn btn-outline-danger', \
+                data: {confirm: "Really delete your #{@run} run? This is not reversible."}, \
+                method: :delete, \
+              )
+                ' Delete

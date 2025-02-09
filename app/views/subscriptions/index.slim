@@ -1,0 +1,200 @@
+.pricing-header.px-3.py-3.pt-md-5.pb-md-4.mx-auto.text-center style='max-width: 700px'
+  h1.display-4.text-monospace Faster, faster, fasterfasterfaster
+  p.lead
+    ' Get advanced analysis, comparisons, auto-highlighting, and more!
+.container
+  .card-deck.mb-3.text-center
+    - plan = current_user&.subscriptions&.active&.first
+    - if [ENV['STRIPE_PLAN_ID_TIER1'], ENV['STRIPE_PLAN_ID_TIER2']].include?(plan&.stripe_plan_id)
+      .card
+        .card-header
+          h4.my-0.font-weight-normal
+            - if plan.stripe_plan_id == ENV['STRIPE_PLAN_ID_TIER1']
+              ' Gold (legacy)
+            - else
+              ' Noclip (legacy)
+        .card-body
+          h1.card-title.pricing-card-title
+            - if plan.stripe_plan_id == ENV['STRIPE_PLAN_ID_TIER1']
+              ' $4
+            - else
+              ' $6
+            small.text-muted
+              ' / mo
+          ul.list-unstyled.mt-3.mb-4
+            li
+              ' Advanced analytics
+              small content='Advanced charts, segment-specific analysis, and more.' v-tippy=true
+                = icon('fas', 'question-circle')
+            li Compare runs with other runners
+            li
+              ' Predict when you'll PB
+              small(
+                content="We'll chart your PBs against your practice time, and extrapolate out when you're likely to PB next."
+                v-tippy=true
+              ) = icon('fas', 'question-circle')
+            li
+              ' Upgrade permalinks to redirectors
+              small content='Links that always redirect to your PB, even when it improves.' v-tippy=true
+                = icon('fas', 'question-circle')
+            li
+              ' Side-by-side video comparisons
+              small(
+                content='When comparing to someone, seek through both your runs to the same split.'
+                v-tippy=true
+              ) = icon('fas', 'question-circle')
+            li Auto-highlight runs on Twitch
+            li Hide runs without disowning them
+            li See sum-of-best leaderboards
+        .card-footer.clearfix
+          .float-right
+            .btn-group
+              button.btn.btn-lg.btn-outline-light.disabled.mr-2(
+                content="You're grandfathered into this plan. You can keep it forever, but if you cancel or upgrade it \
+                will not be available to you anymore. Active since #{plan.created_at.to_date}."
+                style='cursor: default'
+                v-tippy=true
+              ) Grandfathered
+              = form_for(:subscription, method: :delete) do |f|
+                tippy content='Cancel your subscription. You will keep your benefits for the rest of this cycle.'
+                  template v-slot='trigger'
+                    = f.button(con('fas', 'times'), \
+                      class: 'btn btn-lg btn-outline-danger', \
+                      data: {disable_with: icon('fas', 'circle-notch', class: 'fa-spin').html_safe}, \
+                    )
+    - else
+      .card
+        .card-header
+          h4.my-0.font-weight-normal
+            ' Basic
+        .card-body
+          h1.card-title.pricing-card-title Free
+          ul.list-unstyled.mt-3.mb-4
+            li Basic analytics
+            li Compare runs with your past self
+        .card-footer
+          .d-flex
+            button.btn.btn-lg.btn-outline-light.disabled.mr-2.flex-fill(
+              style='cursor: default'
+            ) Free
+    .card
+      .card-header
+        h4.my-0.font-weight-normal
+          ' Gold
+      .card-body
+        h1.card-title.pricing-card-title
+          ' $9
+          small.text-muted
+            ' / mo
+        ul.list-unstyled.mt-3.mb-4
+          li
+            ' Advanced analytics
+            small content='Advanced charts, segment-specific analysis, and more.' v-tippy=true
+              = icon('fas', 'question-circle')
+          li Compare runs with other runners
+          li
+            ' Predict when you'll PB
+            small(
+              content="We'll chart your PBs against your practice time, and extrapolate out when you're likely to PB next."
+              v-tippy=true
+            ) = icon('fas', 'question-circle')
+          li
+            ' Upgrade permalinks to redirectors
+            small content='Links that always redirect to your PB, even when it improves.' v-tippy=true
+              = icon('fas', 'question-circle')
+          li
+            => icon('fab', 'twitch')
+            ' Auto-highlight runs on Twitch
+          li
+            => image_tag(asset_path('srdc.png'), style: 'height: 0.8em', alt: 'Speedrun.com first place trophy')
+            ' Auto-submit runs to speedrun.com
+            .badge.badge-pill.badge-primary New
+          li Hide runs without disowning them
+          li See sum-of-best leaderboards
+          li: i And more as we keep building!
+      .card-footer
+        - if plan && Subscription.is_tier3?(plan)
+          - if plan.canceled?
+            button.btn.btn-lg.btn-block.btn-outline-light.disabled(
+              content='Your subscription is canceled. It will last until the end of your billing period.'
+              style='cursor: default'
+              v-tippy=true
+            ) Canceled
+          - else
+            .d-flex
+              button.btn.btn-lg.btn-outline-light.disabled.flex-fill.mr-2(
+                content="Active since #{plan.created_at.to_date}"
+                style='cursor: default'
+                v-tippy=true
+              ) Active
+
+              - if plan.paypal?
+                tippy content='Cancel your subscription. You will keep your benefits for the rest of this cycle.'
+                  template v-slot='trigger'
+                    = link_to( \
+                      icon('fas', 'times'), \
+                      payments_paypal_unsubscribe_path, \
+                      class: "btn btn-lg btn-outline-danger", \
+                      data: {disable_with: icon('fas', 'circle-notch', class: 'fa-spin').html_safe}, \
+                      method: :post \
+                    )
+              - else
+                = form_for(:subscription, method: :delete) do |f|
+                  tippy content='Cancel your subscription. You will keep your benefits for the rest of this cycle.'
+                    template v-slot='trigger'
+                      = f.button(icon('fas', 'times'),
+                        class: 'btn btn-lg btn-outline-danger', \
+                        data: {disable_with: icon('fas', 'circle-notch', class: 'fa-spin').html_safe}, \
+                      )
+        - elsif plan
+          = form_for(:subscription, method: :patch) do |f|
+            = f.hidden_field(:stripe_plan_id, value: ENV['STRIPE_PLAN_ID_TIER3'])
+            tippy(
+              content='Upgrade your legacy subscription to Gold. The prorated difference will be added to your \
+              next bill.'
+            )
+              template v-slot='trigger'
+                = f.button('Upgrade to Gold', \
+                  class: 'btn btn-lg btn-block btn-outline-primary', \
+                  data: {disable_with: icon('fas', 'circle-notch', class: 'fa-spin').html_safe}, \
+                )
+        - elsif current_user.nil?
+          a.btn.btn-lg.btn-block.btn-primary href='#' data={toggle: :modal, target: '#signin'} Sign in to subscribe
+        - elsif current_user.trial
+          / TODO: disable_with doesn't work in button_tag for some reason
+          p.font-weight-normal
+            = current_user.trial.expired? ? 'Trial expired; upgrade below' : 'Trial active; upgrade to keep benefits'
+          = button_tag( \
+            'Subscribe with credit card', \
+            data: { \
+              disable_with: icon('fas', 'circle-notch', class: 'fa-spin').html_safe, \
+              plan_id: ENV['STRIPE_PLAN_ID_TIER3'] \
+            }, \
+            class: 'btn btn-lg btn-block btn-primary stripe-checkout', \
+          )
+          p.font-weight-normal.mt-2.mb-0
+            ' OR
+          div#paypal-button-container.mt-2 style='margin-bottom: -1.6em'
+        - else
+          small No credit card required
+          = button_to('Try free for 14 days', subscription_trials_path, { \
+              class: 'btn btn-lg btn-block btn-primary', \
+            },
+          )
+  .card-deck.mb-3
+    .card.text-center
+      .card-header
+        h4.my-0.font-weight-normal Organization
+      .card-body
+        h1.card-title.pricing-card-title
+          ' Email us
+        ul.list-unstyled.mt-3.mb-4
+          li Hire us to expose and visualize analytics
+          li Custom-built to your specifications
+          li Fuel your commentary, stream layout, or players
+          li Bulk discounts for Splits.io subs
+      .card-footer
+        a.btn.btn-lg.btn-block.btn-outline-primary href='mailto:ben@splits.io?subject=Splits.io custom analytics' Contact us
+  .card.mb-4.text-center
+    .card-body
+      a href=partners_path Are you a streamer? Check out our partnership program!

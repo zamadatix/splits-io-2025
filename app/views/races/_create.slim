@@ -1,0 +1,7 @@
+- game = local_assigns.fetch(:game, Game.new)
+- category = local_assigns.fetch(:category, Category.new)
+
+- if current_user.present?
+  race-create-button game-id=game.id category-id=category.id
+- else
+  button.btn.btn-success href='#' data={toggle: :modal, target: '#signin'} Sign in to create a race

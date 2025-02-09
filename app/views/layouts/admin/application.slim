@@ -1,0 +1,38 @@
+/ # Application Layout
+/
+/ This view template is used as the layout
+/ for every page that Administrate generates.
+/
+/ By default, it renders:
+/ - Navigation
+/ - Content for a search bar
+/   (if provided by a `content_for` block in a nested page)
+/ - Flashes
+/ - Links to stylesheets and JavaScripts
+
+doctype html
+html lang=I18n.locale
+head
+  meta charset='utf-8'
+  meta name='ROBOTS' content='NOODP'
+  meta name='viewport' content='initial-scale=1'
+  title #{content_for(:title)} - Splits.io
+  = render 'stylesheet'
+  = csrf_meta_tags
+body
+  = javascript_pack_tag 'application'
+
+  // Using Google charts for now because Chartkick + Highcharts doesn't seem to include axes, and tooltips don't include
+  // years (?) with no clear resolution
+  script src='https://www.gstatic.com/charts/loader.js'
+
+  = render 'icons'
+
+  div.app-container
+    = render 'navigation'
+
+    main.main-content role='main'
+      = render 'flashes'
+      = yield
+
+  = render 'javascript'

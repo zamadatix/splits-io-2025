@@ -1,0 +1,7 @@
+/ TODO: messages isn't used rn
+- if local_assigns[:message].nil?
+  - message = ''
+- if local_assigns[:messages].nil?
+  - messages = [message]
+span.spinner-border.spinner-border-sm.mx-1 role='status' data-messages=messages.join(',')
+  span.sr-only Loading...

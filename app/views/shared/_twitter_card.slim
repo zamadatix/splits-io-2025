@@ -1,0 +1,19 @@
+meta name='twitter:card' content='summary_large_image'
+meta name='twitter:site' content='@splitsio'
+meta name='twitter:domain' content=request.host_with_port
+- if @run.present? && !(controller_name == 'runs' && action_name == 'index') # runs#index (homepage) sets a @run when logged out for demo purposes
+  - if @run.game.to_s.present?
+    meta name='twitter:title' content=@run.game
+  - else
+    meta name='twitter:title' content='(no title)'
+  - if @run.category.to_s.present?
+    meta name='twitter:description' content=@run.category
+  - if @run.image_url.present?
+    meta name='twitter:image:src' content=@run.image_url
+- elsif @race.present?
+  meta name='twitter:title' content=@race
+  - if @race.notes.present?
+    meta name='twitter:description' content=@race.notes
+- else
+  meta name='twitter:title' content='Splits.io'
+  meta name='twitter:title' content='Speedrun data store, analysis engine, and racing platform'

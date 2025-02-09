@@ -1,0 +1,119 @@
+#chart-holder
+  .position-relative.overflow-hidden.p-3.p-md-5.m-md-3.text-center.bg-darkish
+    .col-md-10.col-xs-12.col-sm-10.p-lg-5.mx-auto.text-center
+      .display-5
+        img.d-none.d-sm-inline src=asset_path('logo-imageonly.svg') height='75' style='margin-right: 0' alt='Splits.io image only logo'
+        img.d-none.d-sm-inline src=asset_path('logo-textonly.svg') height='75' style='margin-top: .1em' alt='Splits.io text only logo'
+      p.lead Statistical analysis & run sharing for speedrunners. Replace mindless grinding with targeted, hard data.
+      a.btn.btn-lg.btn-primary href='#' data={toggle: :modal, target: '#signin'} Get started
+      b.text-secondary.d-block.mt-3
+        => icon('fas', 'upload')
+        ' Or drag and drop splits at any time
+    .col-md-4.my-5.mx-auto.p2 style="filter: invert(100%)"
+      center
+        a href="https://gamesdonequick.com" alt="Games Done Quick" class="Header_eventLink_u0ZSZ"
+          div style="width: 10em; margin: auto;color:rgba(229, 184, 80, 0.9);"
+            = image_tag(asset_path('partners/gdq.svg'))
+        small.text-dark Supported by Games Done Quick.
+    .d-md-flex.flex-md-equal.w-100.my-md-3.pl-md-3
+      .bg-darkish.col-md-6.mr-md-3.pt-3.px-3.pt-md-5.px-md-5.text-center.text-white.overflow-hidden
+        .my-3.py-3
+          h2.display-5 Share
+          p.lead Link your friends to more than a video recording&mdash;link them to the hard data behind your run.
+          #run-duration-chart.card-img-top
+      .bg-darkish.col-md-6.mr-md-3.pt-3.px-3.pt-md-5.px-md-5.text-center.text-white.overflow-hidden
+        .my-3.py-3
+          h2.display-5 Compare
+          p.lead Find out exactly what they're doing that you're not, down to the second.
+          #reset-chart.card-img-top
+    .d-md-flex.flex-md-equal.w-100.my-md-3.pl-md-3
+      .bg-darkish.col-md-6.mr-md-3.pt-3.px-3.pt-md-5.px-md-5.text-center.text-white.overflow-hidden
+        .my-3.py-3
+          h2.display-5 Predict
+          p.lead Determine when you'll best your time based on past performance.
+          #playtime-chart.card-img-top
+      .bg-darkish.col-md-6.mr-md-3.pt-3.px-3.pt-md-5.px-md-5.text-center.text-white.overflow-hidden
+        .my-3.py-3
+          h2.display-5 Deep dive
+          p.lead Look at individual segments' statistics to hyper-focus your practice.
+          #segment-chart.card-img-top.position-relative
+    .d-md-flex.flex-md-equal.w-100.my-md-3.pl-md-3
+      .bg-darkish.col-md-6.mr-md-3.pt-3.px-3.pt-md-5.px-md-5.text-center.text-white.overflow-hidden
+        .my-3.py-3
+          h2.display-5 Learn
+          p.lead Know when a segment's not as hot as you think it is.
+          .card.border-0.m-0.p-0.
+            .card-group
+              .card.bg-danger: .card-body
+                h6.card-title
+                  ' Standard deviation
+                  small.(
+                    content="A high standard deviation like this indicates inconsistency. You should practice
+                    this segment!"
+                    v-tippy=true
+                  ) = icon('fas', 'exclamation-triangle')
+                h4.card-subtitle 14s
+              .card: .card-body
+                h6.card-title Mean
+                h4.card-subtitle 00:01:08
+              .card: .card-body
+                .float-right.text-light(
+                  content="Stats based on your last 100 runs."
+                  v-tippy=true
+                ) = icon('fas', 'info-circle')
+                h6.card-title Best
+                h4.card-subtitle 00:01:05
+            .card-group
+              .card: .card-body
+                h6.card-title
+                  ' 10th percentile
+                  small(
+                    content="Only 10% of your attempts are faster than this time. Treat this number like a relaxed
+                    best&mdash;aim to beat it."
+                    v-tippy=true
+                  ) = icon('fas', 'question-circle')
+                h4.card-subtitle 00:01:06
+              .card: .card-body
+                h6.card-title
+                  ' Median
+                  small(
+                    content="50% of your attempts are faster than this time. This is the time you'd expect to get
+                    in a marathon or no-reset run."
+                    v-tippy=true
+                  ) = icon('fas', 'question-circle')
+                h4.card-subtitle 00:01:09
+              .card: .card-body
+                h6.card-title
+                  ' 90th percentile
+                  small(
+                    content="90% of your attempts are faster than this time. You can see this as your worst time
+                    excluding fantastic blunders."
+                    v-tippy=true
+                  ) = icon('fas', 'question-circle')
+                h4.card-subtitle 00:01:14
+              .card: .card-body
+                h6.card-title
+                  ' 99th percentile
+                  small(
+                    content="99% of your attempts are faster than this time. All attempts but your absolute worst
+                    fit under this umbrella."
+                    v-tippy=true
+                  ) = icon('fas', 'question-circle')
+                h4.card-subtitle 00:01:34
+            .segment-duration-chart id="segment-duration-chart-#{@run.segments.first.id}" data={segment: @run.segments.first.id}
+      .bg-darkish.col-md-6.mr-md-3.pt-3.px-3.pt-md-5.px-md-5.text-center.text-white.overflow-hidden
+        .my-3.py-3.h-100
+          h2.display-5 Link with Twitch and YouTube
+          p.lead Automatically highlight PBs, compete with friends, and generate YouTube timestamps.
+          .mr-2 style="height: 575px; background-image: url('#{asset_path('landing/youtube-timestamps.png')}'); background-size: cover; background-position: center"
+            ' &nbsp;
+    .row.my-5.py-5: .col-md-12.text-center
+      a.btn.btn-primary href="https://splits.io/oqt"
+        big.d-block: b See an example run
+    .row.my-5.py-5: .col-md-12.text-center
+      button#scroll-up.btn.btn-outline-secondary.btn-lg aria-label='Scroll to top'
+        = icon('fas', 'angle-double-up')
+      big.d-block: b.text-secondary Ready to try?
+#chart-alert
+#chart-spinner.text-secondary.text-center.my-5
+  = render 'shared/spinner'

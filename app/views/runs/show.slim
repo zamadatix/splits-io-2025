@@ -1,0 +1,78 @@
+- content_for(:title, @run)
+- timing = params[:timing] || @run.default_timing
+
+- content_for(:header) do
+  ol.breadcrumb.shadow
+    li.breadcrumb-item = link_to(site_title, root_path)
+    - if @run.game.present? && @run.category.present?
+      li.breadcrumb-item = link_to(@run.game, game_path(@run.game))
+      li.breadcrumb-item = link_to(@run.category, game_category_path(@run.game, @run.category))
+    li.breadcrumb-item.active = link_to(@run.id36, run_path(@run))
+
+
+- if !@run.parsed?
+  #await-runs.text-center.text-primary data-runs=([@run.id36, *@compare_runs.map(&:id36)].join(','))
+    = render 'shared/spinner'
+    p Run uploaded and parsing. You can close this page and come back later.
+- else
+  - if @compare_runs.none? || (@compare_runs.any? && current_user.try(:has_advanced_comparisons?)) || (@run.user && @compare_runs[0].user == @run.user)
+    .row.mx-2
+      .col-md-4 = render 'title', timing: timing, run: @run, compare_runs: @compare_runs
+      .col-md-8 = render 'stats', timing: timing, run: @run, compare_runs: @compare_runs
+
+    = render 'full_timeline', timing: timing, run: @run, compare_runs: @compare_runs
+
+    - if Video.where(run_id: [@run, *@compare_runs].pluck(:id)).any?
+      .card-deck.mx-0
+        - [@run, *@compare_runs].each do |run|
+          - if run.video&.supports_embedding?
+            .card.mx-1.video-card
+              .video-player id="video-player-#{run.id36}" data={run_id: run.id36, start_offset: run.video.start_offset_seconds, video_id: run.video.video_id, run.video.provider => true}
+          - else
+            .card.mx-1
+              i.text-center.my-5 No video attached to this run
+        - if @compare_runs.none?
+          .card.mx-1
+            i.text-center.my-auto.py-5 Select a comparison to see another run's video here
+            .card-footer: .float-right
+              = render 'compare_button', timing: timing, run: @run, compare_runs: @compare_runs
+    .row.row-cols-1.row-cols-md-2.mx-0
+      .col.p-1
+        = render 'split_table', timing: timing, run: @run, compare_runs: @compare_runs
+      .col.p-0
+        - if @run.completed?(timing) && @run.histories.any?
+          #chart-spinner.text-secondary.text-center.my-5
+            = render 'shared/spinner'
+          #chart-alert.alert.alert-danger.m-1 hidden=true
+          #chart-holder hidden=true
+            #run-duration-chart.card.m-1
+            - if current_user&.has_advanced_analytics?
+              #box-plot.card.m-1
+              #segment-chart.card.m-1
+              #reset-chart-container.card.m-1
+                .btn-group.btn-group-toggle.justify-content-end data={toggle: :buttons}
+                  label.btn.btn-sm.btn-outline-secondary.text-white.active.disabled
+                    input#resets-chart-button type="radio" name="reset-chart-buttons" checked=true
+                    ' Resets Per Split
+                  label.btn.btn-sm.btn-outline-secondary.text-white
+                    input#run-progress-chart-button type="radio" name="reset-chart-buttons"
+                    ' Run Progress
+                #reset-chart.m-1
+                #run-progress-chart.m-1.d-none
+              - if @run.histories.any?
+                #playtime-chart.card.m-1
+            - else
+              .card.m-1 style='background: linear-gradient(var(--darkish), transparent); border: none'
+                .card-body: center.m-4
+                  h1 = icon('fas', 'lock')
+                  p: i Subscribe to Splits.io Gold to view advanced charts.
+                  p: a.btn.btn-primary.mr-2 href=subscriptions_path Subscribe to Splits.io Gold
+  - else
+    .container: .col-md-6.offset-md-3: .card
+      .card-body
+        p Subscribe to Splits.io Gold to compare to other users.
+        p
+          ' (Comparing to yourself is free.)
+      .card-footer.clearfix
+        .float-right
+          a.btn.btn-primary.mr-2 href=subscriptions_path Subscribe to Splits.io Gold

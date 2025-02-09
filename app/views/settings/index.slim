@@ -1,0 +1,22 @@
+- content_for(:title, 'Settings')
+- content_for(:header)
+  ol.breadcrumb.shadow
+    li.breadcrumb-item = link_to(site_title, root_path)
+    li.breadcrumb-item = link_to('Settings', settings_path)
+  h2 Settings
+- if current_user.nil?
+  p You need to be signed in to view this page.
+- else
+  .col.p-1 = render partial: 'username'
+  .row.row-cols-1.row-cols-md-2.mx-0
+    .col.p-1 = render partial: 'email'
+    .col.p-1 = render partial: 'password'
+    .col.p-1 = render partial: 'account_links'
+    .col.p-1 = render partial: 'avatar'
+    - if current_user.subscriptions.active.any?
+      .col.p-1 = render partial: 'subscription'
+    - if current_user.patreon&.active?
+      .col.p-1 = render partial: 'patreon_benefits'
+  .p-1 = render partial: 'authorized_applications'
+  .p-1 = render partial: 'my_applications'
+  .p-1 = render partial: 'delete'

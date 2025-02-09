@@ -1,0 +1,95 @@
+@import "purecss/base"
+@import "purecss/grids"
+@import "purecss/grids-responsive"
+@import "purecss/menus"
+@import headings
+@import "font-awesome-sprockets"
+@import "font-awesome"
+@import "vue-multiselect/dist/vue-multiselect.min"
+
+@import colors
+
+@import ads
+@import article
+@import background
+@import brands
+@import browsersource
+@import carousel
+@import center
+@import cursor
+@import footer
+@import forms
+@import glow
+@import jumbotron
+@import navigation
+@import paywall
+@import rivalries
+@import runs
+@import search
+@import statcard
+@import tabs
+@import text
+@import timeline
+@import times
+@import upload
+@import video
+@import vue
+
+hr
+  border-top: 1px dashed #ddd
+  margin: none
+  width: 100%
+
+ul.goals
+  list-style: none
+
+.spinner
+  animation: rotation 4s infinite linear
+
+@-webkit-keyframes rotation
+  from
+    -webkit-transform: rotate(0deg)
+  to
+    -webkit-transform: rotate(-359deg)
+
+.absolute
+  position: absolute
+
+.center
+  text-align: center
+
+th
+  white-space: nowrap
+
+tr[href]
+  cursor: pointer
+
+h2 small
+  font-size: 0.5em
+  display: block
+
+a
+  &:link.twitch-signin img
+    display: none
+    vertical-align: text-bottom
+  &:hover.twitch-signin
+    color: #6441a5
+    text-decoration: none
+    img
+      display: inline
+
+.fake-link
+  color: var(--primary)
+  cursor: pointer
+
+.fake-link:hover
+  opacity: 0.8
+
+.align-right
+  text-align: right
+
+.align-left
+  text-align: left
+
+.kill-run-button
+  cursor: pointer

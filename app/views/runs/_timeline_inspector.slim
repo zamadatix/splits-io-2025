@@ -1,0 +1,30 @@
+- scale_to ||= run.duration(timing)
+- overlap ||= false
+- first, last = run.collapsed_segments(timing).first, run.collapsed_segments(timing).last
+/ This .my-2 spacer must be its own div to put the overlapped timeline inspectors exactly on top of the standard one.
+/ It can't be moved onto the .timeline div or their positions will differ vertically by that margin amount.
+.my-2
+.timeline class=(overlap ? 'absolute' : '')
+  - run.collapsed_segments(timing).each.with_index do |segment, index|
+    .pure-u.inspect(
+      class='segment-inspect'
+      data={run_id: run.id36, segment_number: index+1}
+      style="width: #{segment.proportion(timing, scale_to) * 100.0}%; visibility: hidden;"
+    )
+      .bar
+        p
+      div class="#{'mx-2' if segment == first || segment == last} #{'second-half' if segment.second_half?(timing)}"
+        div = segment.display_name
+        .text-light-50 #{segment.duration(timing).format(precise: run.short?(timing))} duration
+        .text-light-50 #{segment.end(timing).format(precise: run.short?(timing))} finished
+        - if run.has_golds?(timing)
+          - if segment.gold?(timing)
+            .text-gold New best!
+          - elsif segment.duration(timing) == segment.shortest_duration(timing)
+            .text-gold Tied best!
+          - elsif segment.shortest_duration(timing).present?
+            .text-success
+              => (segment.duration(timing) - segment.shortest_duration(timing)).format_casual(num_units: 1)
+              | possible timesave
+          - else
+            .text-danger No best time on record

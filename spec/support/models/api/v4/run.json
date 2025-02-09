@@ -1,0 +1,217 @@
+{
+  "type": "object",
+  "required": [
+    "id",
+    "srdc_id",
+    "realtime_duration_ms",
+    "gametime_duration_ms",
+    "default_timing",
+    "realtime_sum_of_best_ms",
+    "gametime_sum_of_best_ms",
+    "program",
+    "attempts",
+    "image_url",
+    "parsed_at",
+    "created_at",
+    "updated_at",
+    "video_url",
+    "game",
+    "category",
+    "runners",
+    "segments",
+    "uses_autosplitter"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "srdc_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "realtime_duration_ms": {
+      "type": [
+        "number",
+        "null"
+      ]
+    },
+    "gametime_duration_ms": {
+      "type": [
+        "number",
+        "null"
+      ]
+    },
+    "default_timing": {
+      "type": "string",
+      "enum": [
+        "real",
+        "game"
+      ]
+    },
+    "realtime_sum_of_best_ms": {
+      "type": [
+        "number",
+        "null"
+      ]
+    },
+    "gametime_sum_of_best_ms": {
+      "type": [
+        "number",
+        "null"
+      ]
+    },
+    "program": {
+      "type": "string",
+      "enum": [
+        "exchange",
+        "frameperfect",
+        "floating_speedrun_timer",
+        "livesplit",
+        "llanfair",
+        "llanfair_gered",
+        "portal_2_live_timer",
+        "sourcelivetimer",
+        "splitterz",
+        "splitty",
+        "timesplittracker",
+        "urn",
+        "wsplit"
+      ]
+    },
+    "attempts": {
+      "type": [
+        "number",
+        "null"
+      ]
+    },
+    "image_url": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "parsed_at": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "created_at": {
+      "type": "string"
+    },
+    "updated_at": {
+      "type": "string"
+    },
+    "video_url": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "game": {
+      "$ref": "../../../models/api/v4/game.json"
+    },
+    "category": {
+      "$ref": "../../../models/api/v4/category.json"
+    },
+    "runners": {
+      "type": "array",
+      "items": {
+        "$ref": "../../../models/api/v4/runner.json"
+      }
+    },
+    "histories": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "attempt_number",
+          "realtime_duration_ms",
+          "gametime_duration_ms"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "attempt_number": {
+            "type": "number"
+          },
+          "realtime_duration_ms": {
+            "type": "number",
+            "minimum": 0
+          },
+          "gametime_duration_ms": {
+            "type": "number",
+            "minimum": 0
+          }
+        }
+      }
+    },
+    "segments": {
+      "type": "array",
+      "items": {
+        "$ref": "../../../models/api/v4/segment.json"
+      }
+    },
+    "segment_groups": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "segment_number",
+          "histories"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "segment_number": {
+            "type": "number",
+            "minimum": 0
+          },
+          "histories": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "attempt_number",
+                "realtime_duration_ms",
+                "gametime_duration_ms"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "attempt_number": {
+                  "type": "number"
+                },
+                "realtime_duration_ms": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "gametime_duration_ms": {
+                  "type": "number",
+                  "minimum": 0
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "uses_autosplitter": {
+      "type": [
+        "boolean",
+        "null"
+      ]
+    }
+  }
+}

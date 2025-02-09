@@ -1,0 +1,41 @@
+# bundler config.
+/.bundle
+/bundle
+
+# the default SQLite database.
+/db/*.sqlite3
+/db/*.sqlite3-journal
+
+# all logfiles and tempfiles.
+/log/*
+/tmp/*
+!/log/.keep
+!/tmp/.keep
+
+# uploaded runs, Twitch oauth credentials, etc.
+/private
+
+# precompiled assets
+/public/assets
+
+# testing
+/.rspec
+/coverage
+
+node_modules
+/public/packs
+/public/packs-test
+/node_modules
+/yarn-error.log
+yarn-debug.log*
+.yarn-integrity
+
+.env*
+.envrc
+
+.DS_Store
+
+# local activestorage
+storage
+
+.byebug_history

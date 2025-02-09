@@ -1,0 +1,30 @@
+.card = form_for(current_user, url: settings_path) do |f|
+  .card-header.text-white Username
+  .card-body
+    .row
+      .col-md-6
+        .mb-3 = f.text_field(:name, class: 'form-control')
+        .card: .card-body
+            p
+              ' Letters, numbers, underscores. (For nerds:
+              code = User::NAME_REGEX.inspect
+              | .)
+            p Capitalization matters for display, but URLs will always be lowercase.
+      .col-md-6: .card: .card-body
+        - sample_run = current_user.runs.where.not(category: nil).last || Run.random
+        ' Changing your username breaks these links:
+        ul
+          li: code: a href=user_path(current_user) = request.host_with_port + user_path(current_user)
+          li: code: a href=short_user_path(current_user) = request.host_with_port + short_user_path(current_user)
+          li
+            | All permalink redirectors
+            - if current_user.runs.any?
+              ' , e.g.
+              code: a href=user_pb_path(sample_run.user, sample_run.game, sample_run.category)
+                = request.host_with_port + user_pb_path(sample_run.user, sample_run.game, sample_run.category)
+        ' These links are safe:
+        ul: li
+          ' All standard permalinks, e.g.
+          code: a href=run_path(sample_run) = request.host_with_port + run_path(sample_run)
+        ' Changing only capitalization is safe and has none of the above effects.
+  .card-footer.clearfix: .float-right: input.btn.btn-outline-primary type='submit' value='Save'

@@ -1,0 +1,85 @@
+{
+  "_schemaVersion": "v1.0.1",
+  "links": <%= {
+    splitsioID: @run.id36
+  }.compact.to_json.html_safe %>,
+  "timer": <%= {
+    shortname: Run.program(@run.timer).to_sym.to_s,
+    longname: Run.program(@run.timer).to_s,
+    website: Run.program(@run.timer).website,
+    version: ''
+  }.to_json.html_safe %>,
+  "attempts": <%= {
+    total: @run.attempts || 0,
+    histories: @run.histories.map do |history|
+      {
+        attemptNumber: history.attempt_number,
+        duration: {
+          realtimeMS: history.duration_ms(Run::REAL),
+          gametimeMS: history.duration_ms(Run::GAME)
+        }
+      }
+    end
+  }.to_json.html_safe %>,
+  <% if @run.image_url.present? %>
+    "imageURL": "<%= @run.image_url %>",
+  <% end %>
+  <% if @run.video&.url.present? %>
+    "videoURL": "<%= @run.video.url %>",
+  <% end %>
+  <% if @run.game.present? %>
+    "game": {
+      "longname": "<%= @run.game.name %>",
+      <% if @run.game.srdc.try(:shortname).present? %>
+        "shortname": "<%= @run.game.srdc.shortname %>",
+      <% end %>
+      "links": {
+        "splitsioID": "<%= @run.game.id %>"
+      }
+    },
+  <% end %>
+  <% if @run.category.present? %>
+    "category": <%= {
+      longname: @run.category.name,
+      shortname: @run.category.shortname,
+      links: {
+        splitsioID: @run.category.id.to_s
+      }
+    }.to_json.html_safe %>,
+  <% end %>
+  "runners": [<% if @run.user.present?
+    {
+      longname: @run.user.name,
+      shortname: @run.user.name,
+      links: {
+        splitsioID: @run.user.id.to_s,
+        twitchID: @run.user.twitch.try(:twitch_id)
+      }
+    }.to_json.html_safe
+  end %>],
+  "segments": <%= @run.segments.map do |segment|
+    {
+      name: segment.name,
+      endedAt: {
+        realtimeMS: segment.end_ms(Run::REAL) || 0,
+        gametimeMS: segment.end_ms(Run::GAME) || 0
+      },
+      bestDuration: {
+        realtimeMS: segment.shortest_duration_ms(Run::REAL) || 0,
+        gametimeMS: segment.shortest_duration_ms(Run::GAME) || 0
+      },
+      isSkipped: segment.skipped?(Run::REAL),
+      histories: segment.histories.with_ends.map do |history|
+        {
+          attemptNumber: history.attempt_number,
+          endedAt: {
+            realtimeMS: history.realtime_end_ms || 0,
+            gametimeMS: history.gametime_end_ms || 0
+          },
+          isSkipped: history.duration_ms(Run::REAL).try(:zero?) && history.duration_ms(Run::GAME).try(:zero?),
+          isReset: history.duration_ms(Run::REAL).nil? && history.duration_ms(Run::GAME).nil?
+        }
+      end
+    }
+  end.to_json.html_safe %>
+}

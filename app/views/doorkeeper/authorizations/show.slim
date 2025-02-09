@@ -1,0 +1,21 @@
+- content_for(:title, 'Settings')
+article
+  .row
+    .col-lg-6.offset-lg-3
+      .card
+        .card-header.text-white Authorization Code Created
+        .card-body
+          p It works! Here's your authorization code.
+          p
+            .input-group
+              input.form-control id="code" type='text' value=params[:code] readonly=1
+              .input-group-btn
+                .btn.btn-primary.clipboard-btn data-clipboard-target="#code"
+                  span#copy = icon("fas", "copy")
+                  span#copied style='display: none;' = icon("fas", "check")
+          p
+            span> In a production environment, your users won't see this page and will instead be sent to your
+            code redirect_uri
+            span<> with a
+            code code
+            span< URL param containing this value.

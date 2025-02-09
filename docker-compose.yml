@@ -1,0 +1,119 @@
+version: "3.7"
+x-server-environment: &server-environment
+  - AWS_REGION=local
+  - AWS_ACCESS_KEY_ID=beep
+  - AWS_SECRET_KEY=boop
+  - ENABLE_ADS=0
+  - GOOGLE_CLIENT_ID
+  - GOOGLE_CLIENT_SECRET
+  - NODE_ENV=development
+  - PATREON_CLIENT_ID
+  - PATREON_CLIENT_SECRET
+  - QUEUES=discover_runner,highlight_cleanup,race_cleanup,sync_user_follows,v4_races,parse_run,cleanup_runs,active_storage_purge,active_storage_analysis,mailers,track # keep this in sync with every job in app/jobs, except "mailers" which is here but not in app/jobs as it is managed by Rails
+  - RAILS_LOG_TO_STDOUT=true # Log to stdout so docker/docker-compose can take over logs
+  - RAILS_ENV
+  - RAILS_ROOT="/app"
+  - READ_ONLY_MODE=0
+  - REDIS_URL="redis/0"
+  - RUST_BACKTRACE=1
+  - S3_BUCKET=splits-io
+  - S3_HOST=s3.localhost
+  - SITE_TITLE=Splits.io (Local)
+  - SKYLIGHT_DISABLE_DEV_WARNING=1
+  - SPLITSIO_CLIENT_SECRET
+  - SPLITSIO_CLIENT_ID
+  - STRIPE_PLAN_ID_TIER1=plan_FmRDE979W782Zj
+  - STRIPE_PLAN_ID_TIER2=plan_FmRDa9Hhf1lwMQ
+  - STRIPE_PLAN_ID_TIER3=plan_GDlCHoXN5YCCUg
+  - STRIPE_PUBLISHABLE_KEY=pk_test_8XH713ExTipOnBebjfsHHffm
+  - STRIPE_SECRET_KEY
+  - STRIPE_WEBHOOK_SECRET
+  - TWITCH_CLIENT_ID
+  - TWITCH_CLIENT_SECRET
+  - PAYPAL_API_HOST=api-m.sandbox.paypal.com
+  - PAYPAL_CLIENT_ID
+  - PAYPAL_CLIENT_SECRET
+  - PAYPAL_PLAN_ID=P-86R46997GH219170TL7DOHCA
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: 1m
+    max-file: "1"
+x-app: &app
+  build:
+    context: .
+    dockerfile: Dockerfile
+    args:
+      RUBY_VERSION: "3.1.0" # also update docker-compose-production.yml, Gemfile, and .rubocop.yml
+  image: splitsio
+  tmpfs:
+    - /tmp
+x-backend: &backend
+  <<: *app
+  stdin_open: true
+  tty: true
+  volumes:
+    - .:/app
+    - ./bundle:/bundle
+    - ./node_modules:/app/node_modules
+    - packs:/app/public/packs
+    - rails_cache:/app/tmp/cache
+  links:
+    - s3:s3.localhost
+  depends_on:
+    - db
+    - s3
+    - redis
+
+services:
+  db:
+    environment:
+      - POSTGRES_HOST_AUTH_METHOD=trust
+    image: postgres:17.0
+    logging: *default-logging
+    volumes:
+      - ./db/init.sql:/docker-entrypoint-initdb.d/10-init.sql
+      - db:/var/lib/postgresql/data
+  s3:
+    image: lphoward/fake-s3
+    logging: *default-logging
+    ports:
+      - 4569:4569
+    volumes:
+      - s3:/fakes3_root
+  webpacker:
+    <<: *app
+    command: bash -c "ruby bin/webpack-dev-server"
+    environment: *server-environment
+    logging: *default-logging
+    ports:
+      - 3035:3035
+    volumes:
+      - .:/app
+      - ./bundle:/bundle
+      - packs:/app/public/packs
+      - rails_cache:/app/tmp/cache
+  web:
+    <<: *backend
+    command: bash -c "rm -f /app/tmp/pids/server.pid && bundle exec rails s -p 3000 -b '0.0.0.0'"
+    environment: *server-environment
+    logging: *default-logging
+    ports:
+      - 3000:3000
+  worker:
+    <<: *backend
+    command: bash -c "rm -f /app/tmp/pids/delayed*.pid && bundle exec rake jobs:work"
+    environment: *server-environment
+    logging: *default-logging
+  redis:
+    image: redis:5.0.5
+    logging: *default-logging
+    volumes:
+      - redis:/data
+
+volumes:
+  db:
+  packs:
+  rails_cache:
+  redis:
+  s3:

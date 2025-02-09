@@ -1,0 +1,43 @@
+- description ||= nil
+- cols ||= [:runner, :time, :name, :video, :rival, :uploaded]
+/ This allows us to blindly check the keys for items instead of wrapping in `try`s
+- col_options = cols.to_h { |col| [col, []] }.merge(local_assigns.fetch(:col_options, {}))
+- runs = order_runs(runs).page(params[:page]).includes(:user, :video, :segments, :category, game: [:srdc])
+- if runs.none?
+  - if description.present?
+    h5.card-header.text-white = description
+  center.m-4
+    i Nothing to show!
+- else
+  - if description.present?
+    h5.card-header.text-white = description
+    .list-group.bg-transparent
+      - runs.each do |run|
+        - timing = params[:timing] || run.default_timing
+        = link_to(run, class: 'list-group-item list-group-item-action flex-column align-items-start bg-transparent text-light')
+          .media
+            - if run.game&.srdc&.cover_url
+              = image_tag(run.game.srdc.cover_url, skip_pipeline: true, style: 'height: 100%; width: 70px', class: 'mr-3', alt: "#{run.game.srdc.name}'s cover")
+            - else
+              .mr-3 style='width: 70px; height: 70px' &nbsp;
+            .media-body
+              .d-flex.w-100.justify-content-between
+                h5.mb-1 = run.game
+                h5
+                  - if run.video
+                    small => icon('fas', 'video')
+                  = run.duration(run.default_timing).format
+              h6.mb-1
+                => run.category
+                - if cols.include?(:runner)
+                  ' by #{run.user}
+              div
+                div = render partial: 'shared/relative_time', locals: {time: run.created_at, ago: true}
+                - if cols.include?(:rival)
+                  - rivalry = run.user.rivalries.includes(:to_user).detect { |r| r.category_id == run.category_id }
+                  - if rivalry.present? && rivalry.to_user.pb_for(timing, run.category).present?
+                    - rival_run = rivalry.to_user.pb_for(timing, run.category)
+                    = pretty_difference(run.duration(run.default_timing), rival_run.duration(run.default_timing))
+                    '  against rival
+  .mx-auto
+    = paginate(runs, theme: 'twitter-bootstrap-4', pagination_class: 'mt-3')

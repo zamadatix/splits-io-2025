@@ -1,0 +1,77 @@
+version: "3.7"
+x-environment: &server-environment
+  - ASSET_HOST
+  - AWS_ACCESS_KEY_ID
+  - AWS_REGION
+  - AWS_SECRET_KEY
+  - DATABASE_URL
+  - ENABLE_ADS=1
+  - GOOGLE_CLIENT_ID
+  - GOOGLE_CLIENT_SECRET
+  - NEW_RELIC_LICENSE_KEY
+  - NODE_ENV=production
+  - PATREON_CLIENT_ID
+  - PATREON_CLIENT_SECRET
+  - PATREON_WEBHOOK_SECRET
+  - QUEUES=discover_runner,highlight_cleanup,race_cleanup,sync_user_follows,v4_races,parse_run,cleanup_runs,active_storage_purge,active_storage_analysis,mailers,track # keep this in sync with every job in app/jobs, except "mailers" which is here but not in app/jobs as it is managed by Rails
+  - RAILS_ENV=production
+  - RAILS_LOG_TO_STDOUT=true # Log to stdout so docker/docker-compose can take over logs
+  - RAILS_SERVE_STATIC_FILES=1
+  - RAILS_SKIP_ASSET_COMPILATION=false
+  - RAILS_SKIP_MIGRATIONS=false
+  - READ_ONLY_MODE=0
+  - REDIS_URL
+  - ROLLBAR_ACCESS_TOKEN
+  - ROLLBAR_ENV
+  - S3_BUCKET
+  - SECRET_KEY_BASE
+  - SITE_TITLE
+  - SKYLIGHT_AUTHENTICATION
+  - SPLITSIO_CLIENT_ID
+  - SPLITSIO_CLIENT_SECRET
+  - STRIPE_PLAN_ID_TIER1=plan_FmTrtxmjMQtRZw
+  - STRIPE_PLAN_ID_TIER2=plan_FmTrIECG2yldww
+  - STRIPE_PLAN_ID_TIER3=plan_GDqBjHfafzS1Hn
+  - STRIPE_PUBLISHABLE_KEY
+  - STRIPE_SECRET_KEY
+  - STRIPE_WEBHOOK_SECRET
+  - TWITCH_CLIENT_ID
+  - TWITCH_CLIENT_SECRET
+  - PAYPAL_API_HOST=api-m.paypal.com
+  - PAYPAL_CLIENT_ID
+  - PAYPAL_CLIENT_SECRET
+  - PAYPAL_PLAN_ID=P-8X852520X76298909L7B74BY
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: 100m
+    max-file: "1"
+
+x-app: &app
+  build:
+    context: .
+    dockerfile: Dockerfile
+    cache_from:
+      - "${REPOSITORY_URI:-splitsio}:latest"
+    args:
+      RUBY_VERSION: "3.1.0" # also update docker-compose.yml, Gemfile, and .rubocop.yml
+  environment: *server-environment
+  image: splitsio
+  logging: *default-logging
+  volumes:
+    - .:/app
+    - ./bundle:/bundle
+    - ./node_modules:/app/node_modules
+
+services:
+  web:
+    <<: *app
+    command: bash -c "rm -f /app/tmp/pids/server.pid && bundle exec rails db:migrate && bundle exec rails assets:precompile && bundle exec rails s -p 3000 -b '0.0.0.0'"
+    ports:
+      - 3000:3000
+    restart: always
+  worker:
+    <<: *app
+    command: bash -c "rm -f /app/tmp/pids/delayed*.pid && bundle exec rake jobs:work" # bin/delayed_job doesn't obey QUEUES
+    ports: []
+    restart: always

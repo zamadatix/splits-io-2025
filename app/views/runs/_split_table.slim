@@ -1,0 +1,71 @@
+.card.mu-2
+  h5.card-header Segments
+  .table-responsive: table.card-body.table.mb-0.bg-transparent
+    thead: tr
+      th.align-right #
+      - if run.segments.map(&:icon).any?(&:attached?)
+        th.text-center Icon
+      th.align-left Name
+      th.align-right Duration
+      th.align-right Finished At
+      th.align-right Stats
+    tbody
+      - compare_segments = compare_runs.map { |r| r.segments_with_groups }
+      - run.segments_with_groups.zip(*compare_segments).each do |segment, *compare_segments|
+        - compare_segment = compare_segments.compact.min_by { |s| s.duration(timing) }
+        tr class="#{segment.segment_group_parent? ? 'segment-group' : ''}"
+          td.align-right.align-middle = segment.segment_group_parent? ? '' : segment.segment_number + 1
+          - if run.segments.map(&:icon).any?(&:attached?)
+            td.text-center.align-middle
+              - if !segment.segment_group_parent? && segment.icon.attached?
+                - if segment.icon.variable?
+                  = image_tag(segment.icon.variant(convert: 'png', resize_to_fit: [30, 30]))
+                - else
+                  = image_tag(segment.icon, width: 30, height: 30)
+          td.align-left.align-middle = segment.display_name.presence || '-'
+          td.align-right.align-middle
+            - if segment.skipped?(timing) || segment.reduced?(timing)
+              span.time -
+            - else
+              - if compare_segment.present?
+                = delta(segment.duration(timing), compare_segment.duration(timing), subject: compare_segment.run.user || '???')
+              - if segment.gold?(timing)
+                .gold-badge.align-middle content='Gold' v-tippy=true
+              = segment.duration(timing).format(precise: run.short?(timing))
+          - if segment.skipped?(timing)
+            td.align-right.time.align-middle -
+          - else
+            td.align-right.align-middle
+              - if compare_segment.present?
+                = delta(segment.end(timing), compare_segment.end(timing), subject: compare_segment.run.user || '???')
+              = segment.end(timing).format(precise: run.short?(timing))
+          - history_stats = segment.history_stats(timing)
+          td.align-right.align-middle
+            - if history_stats.present?
+              - danger = history_stats[:standard_deviation].to_f > history_stats[:mean].to_f / 2
+              - if danger
+                .segment-duration-chart-toggler.text-danger.cursor-pointer(
+                  content='This segment needs work!'
+                  data-segment=segment.id
+                  v-tippy=true
+                ) = icon('fas', 'chart-pie')
+              - else
+                .segment-duration-chart-toggler.text-secondary.cursor-pointer data-segment=segment.id
+                  = icon('fas', 'chart-pie')
+        - if history_stats.present?
+          tr hidden=true data-segment=segment.id
+              td colspan='999' style='margin: 0; padding: 0;'
+                - if current_user&.has_advanced_analytics?
+                  = render 'segment_stats',
+                    timing: timing,
+                    segment: segment,
+                    danger: danger,
+                    history_stats: history_stats
+                - else
+                  .card
+                    .card-body: center.m-4
+                      h1 = icon('fas', 'lock')
+                      i Subscribe to Splits.io to see segment-scoped stats and charts.
+                    .card-footer.clearfix
+                      .float-right
+                        a.btn.btn-primary href=subscriptions_path Subscribe
